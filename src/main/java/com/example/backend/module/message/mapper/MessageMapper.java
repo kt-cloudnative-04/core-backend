@@ -6,6 +6,7 @@ import com.example.backend.module.message.dto.response.MessageResponse;
 import com.example.backend.module.message.entity.Message;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -23,7 +24,8 @@ public class MessageMapper {
         return new MessageResponse(
                 message.getId(),
                 message.getMessage(),
-                message.getCreatedAt()
+                message.getCreatedAt(),
+                LocalDateTime.now()
         );
     }
 
