@@ -1,5 +1,6 @@
 package com.example.backend.module.message.mapper;
 
+import com.example.backend.module.member.entity.Member;
 import com.example.backend.module.message.dto.request.MessageSaveRequest;
 import com.example.backend.module.message.dto.response.MessageResponse;
 import com.example.backend.module.message.entity.Message;
@@ -10,9 +11,11 @@ import java.util.List;
 @Component
 public class MessageMapper {
 
-    public Message toMessageEntity(MessageSaveRequest request) {
+    public Message toMessageEntity(MessageSaveRequest request, Member member
+    ) {
         return new Message(
-                request.getMessage()
+                request.getMessage(),
+                member
         );
     }
 

@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MessageSaveRequest {
     private String message;
+    private Integer memberId;
 }

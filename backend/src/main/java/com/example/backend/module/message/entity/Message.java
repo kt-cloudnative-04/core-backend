@@ -21,9 +21,13 @@ public class Message {
     private LocalDateTime createdAt;
 
     // member 연관관계 추가
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
-    public Message(String message) {
+    public Message(String message,Member member) {
         this.message = message;
+        this.member = member;
         this.createdAt = LocalDateTime.now();
     }
 }
