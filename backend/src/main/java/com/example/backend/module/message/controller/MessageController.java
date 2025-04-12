@@ -24,7 +24,7 @@ public class MessageController {
 
     @GetMapping("/{messageId}")
     public ResponseEntity<MessageResponse> getMessage(@PathVariable("messageId") Long messageId) {
-        return null;
+        return ResponseEntity.ok(messageService.getMessageById(messageId));
     }
 
     @GetMapping("/all/{memberId}")
