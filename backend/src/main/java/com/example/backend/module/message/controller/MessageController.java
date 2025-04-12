@@ -27,8 +27,8 @@ public class MessageController {
         return null;
     }
 
-    @GetMapping("/all/{messageId}")
-    public ResponseEntity<List<MessageResponse>> getAllMessages(@PathVariable("messageId") Integer messageId) {
+    @GetMapping("/all/{memberId}")
+    public ResponseEntity<List<MessageResponse>> getAllMessages(@PathVariable("messageId") Integer memberId) {
         return null;
     }
 }

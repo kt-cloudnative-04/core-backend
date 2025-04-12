@@ -29,8 +29,8 @@ public class MessageService {
     }
 
     private String toKafkaMessage(Message message) {
-        return String.format("type=SAVED_TO_DB | id=%d | member=MEMBER | time=%d",
-                message.getId(), LocalDateTime.now());
+        return String.format("type=SAVED_TO_DB | id=%d | member=MEMBER | time=%s",
+                message.getId(), LocalDateTime.now().toString());
     }
 
     @Transactional
