@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mariadb://localhost:3306/testdb
-    username: testuser
-    password: testpass
+    url: jdbc:mariadb://${MARIADB_URL:localhost:3306}/${MARIADB_DATABASE:testdb}
+    username: ${MARIADB_USERNAME:testuser}
+    password: ${MARIADB_PASSWORD:testpass}
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
@@ -17,11 +17,11 @@ spring:
       timeout: 1800
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 kafka:
-  bootstrap-servers: localhost:9092
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
   consumer:
     group-id: my-group
     auto-offset-reset: earliest
