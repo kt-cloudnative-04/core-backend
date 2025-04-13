@@ -88,7 +88,7 @@ jobs:
 
       - name: 'update image tag in manifests'
         run: |
-          sed -i.bak "s|image: .*/cloudnative-backend-dev:.*|image: $FULL_IMAGE_NAME|" kubernetes/deployment.yaml
+          sed -i.bak "s|image: .*/cloudnative-backend-prod:.*|image: $FULL_IMAGE_NAME|" kubernetes/deployment.yaml
           rm kubernetes/deployment.yaml.bak
 
       - name: 'commit and push changes'
