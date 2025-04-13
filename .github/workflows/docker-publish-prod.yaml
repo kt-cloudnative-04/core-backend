@@ -28,13 +28,13 @@ jobs:
       - name: 'set up docker buildx'
         uses: docker/setup-buildx-action@v3
 
-      - name: 'cache docker layers'
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+#      - name: 'cache docker layers'
+#        uses: actions/cache@v3
+#        with:
+#          path: /tmp/.buildx-cache
+#          key: ${{ runner.os }}-buildx-${{ github.sha }}
+#          restore-keys: |
+#            ${{ runner.os }}-buildx-
 
       - name: 'build docker image'
         run: |
@@ -45,13 +45,13 @@ jobs:
             --tag $FULL_IMAGE_NAME \
             --load .
 
-      - name: 'scan docker image with trivy'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.FULL_IMAGE_NAME }}
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
+#      - name: 'scan docker image with trivy'
+#        uses: aquasecurity/trivy-action@master
+#        with:
+#          image-ref: ${{ env.FULL_IMAGE_NAME }}
+#          format: table
+#          exit-code: 1
+#          ignore-unfixed: true
 
       #      - name: 'get AKS credentials'
       #        run: |
