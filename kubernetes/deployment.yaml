@@ -72,6 +72,11 @@ spec:
                 secretKeyRef:
                   name: prod-secret
                   key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: prod-secret
+                  key: REDIS_PASSWORD
             - name: KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 secretKeyRef:
