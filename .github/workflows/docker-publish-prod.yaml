@@ -43,7 +43,8 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache \
-            --tag $FULL_IMAGE_NAME .
+            --tag $FULL_IMAGE_NAME \
+            --load .
 
       - name: 'scan docker image with trivy'
         uses: aquasecurity/trivy-action@master
@@ -65,9 +66,9 @@ jobs:
         run: |
           kubectl create secret docker-registry acr-registry \
             --namespace ${{ env.KUBERNETES_NAMESPACE }} \
-            --docker-server=${{ env.REGISTRY }} \
-            --docker-username=${{ env.REGISTRY_USERNAME }} \
-            --docker-password=${{ env.REGISTRY_PASSWORD }} \
+            --docker-server=${{ secrets.REGISTRY_LOGIN_SERVER }} \
+            --docker-username=${{ secrets.REGISTRY_USERNAME }} \
+            --docker-password=${{ secrets.REGISTRY_PASSWORD }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: 'create or update secrets'
