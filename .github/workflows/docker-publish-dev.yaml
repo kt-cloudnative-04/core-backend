@@ -79,6 +79,7 @@ jobs:
             --from-literal=MARIADB_PASSWORD="${{ secrets.PROD_MARIADB_PASSWORD }}" \
             --from-literal=REDIS_HOST="${{ secrets.PROD_REDIS_HOST }}" \
             --from-literal=REDIS_PORT="${{ secrets.PROD_REDIS_PORT }}" \
+            --from-literal=REDIS_PASSWORD="${{ secrets.PROD_REDIS_PASSWORD }}" \
             --from-literal=KAFKA_BOOTSTRAP_SERVERS="${{ secrets.PROD_KAFKA_BOOTSTRAP_SERVERS }}" \
             --namespace ${{ env.KUBERNETES_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
