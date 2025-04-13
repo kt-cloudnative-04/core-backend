@@ -31,4 +31,9 @@ public class MessageController {
     public ResponseEntity<List<MessageResponse>> getAllMessages(@PathVariable("memberId") Integer memberId) {
         return ResponseEntity.ok(messageService.getAllMessages(memberId));
     }
+
+    @GetMapping("/logs/{memberId}")
+    public ResponseEntity<List<String>> getAllLogs(@PathVariable("memberId") Integer memberId) {
+        return ResponseEntity.ok(messageService.getAllLogs(memberId));
+    }
 }
