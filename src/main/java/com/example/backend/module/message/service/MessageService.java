@@ -17,6 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,24 +31,29 @@ public class MessageService {
 
     private final MemberRepository memberRepository;
 
-    private final RedisTemplate<String,MessageResponse> redisTemplate;
+    private final RedisTemplate<String,MessageResponse> messageTemplate;
+
+    private final RedisTemplate<String,String> logTemplate;
 
     private static final String messagePrefix = "message:";
+
+    private static final String logPrefix = "log:";
 
     public MessageService(
             MessageRepository messageRepository, MessageMapper messageMapper,
             MessageKafkaProducer messageKafkaProducer, MemberRepository memberRepository,
-            RedisTemplate<String,MessageResponse> redisTemplate) {
+            RedisTemplate<String,MessageResponse> messageTemplate, RedisTemplate<String,String> logTemplate) {
         this.messageRepository = messageRepository;
         this.messageMapper = messageMapper;
         this.messageKafkaProducer = messageKafkaProducer;
         this.memberRepository = memberRepository;
-        this.redisTemplate = redisTemplate;
+        this.messageTemplate = messageTemplate;
+        this.logTemplate = logTemplate;
     }
 
-    private String toKafkaMessage(Message message, Integer memberId) {
-        return String.format("type=SAVED_TO_DB | id=%d | memberId=%d | time=%s",
-                message.getId(), memberId, LocalDateTime.now());
+    private String toMessage(String type, Integer memberId) {
+        return String.format("type=%s | memberId=%d | time=%s",
+                type, memberId, LocalDateTime.now());
     }
 
 
@@ -58,13 +64,28 @@ public class MessageService {
 
         Message message = messageRepository.save(messageMapper.toMessageEntity(request,member));
 
-        messageKafkaProducer.send(toKafkaMessage(message, request.getMemberId()));
+        String log = toMessage("SAVE_TO_DB", request.getMemberId());
+
+        messageKafkaProducer.send(log);
+        saveToRedisLogAfterCommit(member.getId(),log);
 
         MessageResponse messageResponse =  messageMapper.toMessageResponse(message);
 
-        saveToRedisAfterCommit(member.getId(),messageResponse);
+        saveToRedisMessageAfterCommit(member.getId(),messageResponse);
 
         return messageResponse;
+    }
+
+    public List<String> getAllLogs(Integer memberId) {
+        String logKey = logPrefix + memberId;
+
+        List<String> cachedList = logTemplate.opsForList().range(logKey, 0, -1);
+
+        if (cachedList != null && !cachedList.isEmpty()) {
+            return cachedList;
+        }
+
+        return new ArrayList<>();
     }
 
     @Transactional(readOnly = true)
@@ -77,7 +98,11 @@ public class MessageService {
 
         String redisKey = messagePrefix + memberId;
 
-        List<MessageResponse> cachedList = redisTemplate.opsForList().range(redisKey, 0, -1);
+        String log = toMessage("SELECT_FROM_DB", member.getId());
+
+        List<MessageResponse> cachedList = messageTemplate.opsForList().range(redisKey, 0, -1);
+
+        saveToRedisLogAfterCommit(member.getId(),log);
 
         if (cachedList != null && !cachedList.isEmpty()) {
             return cachedList;
@@ -88,13 +113,32 @@ public class MessageService {
         );
 
         if (!messageResponses.isEmpty()) {
-            redisTemplate.opsForList().rightPushAll(redisKey, messageResponses.toArray(new MessageResponse[0]));
+            messageTemplate.opsForList().rightPushAll(redisKey, messageResponses.toArray(new MessageResponse[0]));
         }
 
         return messageResponses;
     }
 
-    private void saveToRedisAfterCommit(Integer memberId, MessageResponse response) {
+    private void saveToRedisLogAfterCommit(Integer memberId, String response) {
+        String redisKey = logPrefix + memberId;
+
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        logTemplate.opsForList().rightPush(redisKey, response);
+                    } catch (Exception e) {
+                        log.warn("[REDIS ERROR] Failed to cache log: {}", e.getMessage());
+                    }
+                }
+            });
+        } else {
+            logTemplate.opsForList().rightPush(redisKey, response);
+        }
+    }
+
+    private void saveToRedisMessageAfterCommit(Integer memberId, MessageResponse response) {
         String redisKey = messagePrefix + memberId;
 
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
@@ -102,14 +146,14 @@ public class MessageService {
                 @Override
                 public void afterCommit() {
                     try {
-                        redisTemplate.opsForList().rightPush(redisKey, response);
+                        messageTemplate.opsForList().rightPush(redisKey, response);
                     } catch (Exception e) {
                         log.warn("[REDIS ERROR] Failed to cache message: {}", e.getMessage());
                     }
                 }
             });
         } else {
-            redisTemplate.opsForList().rightPush(redisKey, response);
+            messageTemplate.opsForList().rightPush(redisKey, response);
         }
     }
 }
