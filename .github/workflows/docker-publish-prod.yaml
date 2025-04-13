@@ -8,9 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: cloudnative-backend-prod
-  IMAGE_TAG: ${{ github.sha }}
   FULL_IMAGE_NAME: ${{ secrets.REGISTRY_LOGIN_SERVER }}/cloudnative-backend-prod:${{ github.sha }}
+  KUBERNETES_NAMESPACE: backend-prod
 
 jobs:
   build-and-deploy:
@@ -27,13 +26,26 @@ jobs:
       #      - name: Login to ACR
       #        run: az acr login --name ${{ secrets.REGISTRY_NAME }}
 
+      - name: 'set up docker buildx'
+        uses: docker/setup-buildx-action@v3
+
+      - name: 'cache docker layers'
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: 'build docker image'
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            -t $FULL_IMAGE_NAME .
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache \
+            --tag $FULL_IMAGE_NAME .
 
-      - name: 'Scan Docker image with Trivy'
+      - name: 'scan docker image with trivy'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.FULL_IMAGE_NAME }}
@@ -47,7 +59,16 @@ jobs:
 
       - name: 'create namespace if not exists'
         run: |
-          kubectl create namespace backend-prod --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace ${{ env.KUBERNETES_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: 'create acr pull secret'
+        run: |
+          kubectl create secret docker-registry acr-registry \
+            --namespace ${{ env.KUBERNETES_NAMESPACE }} \
+            --docker-server=${{ env.REGISTRY }} \
+            --docker-username=${{ env.REGISTRY_USERNAME }} \
+            --docker-password=${{ env.REGISTRY_PASSWORD }} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: 'create or update secrets'
         run: |
@@ -59,7 +80,7 @@ jobs:
             --from-literal=REDIS_HOST="${{ secrets.PROD_REDIS_HOST }}" \
             --from-literal=REDIS_PORT="${{ secrets.PROD_REDIS_PORT }}" \
             --from-literal=KAFKA_BOOTSTRAP_SERVERS="${{ secrets.PROD_KAFKA_BOOTSTRAP_SERVERS }}" \
-            -n backend-prod --dry-run=client -o yaml | kubectl apply -f -
+            --namespace ${{ env.KUBERNETES_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
       - name: 'push docker image'
         run: |
