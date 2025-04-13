@@ -33,7 +33,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
         - name: container-backend-prod
-          image: gen03registry04.azurecr.io/cloudnative-backend-prod:4fe89429f0a2f838770b0b8a1e9cc67810398a68
+          image: gen03registry04.azurecr.io/cloudnative-backend-prod:4df803e0d178d9a2242df7b94fc0bef8f9b562f3
           resources:
             requests:
               cpu: 100m
