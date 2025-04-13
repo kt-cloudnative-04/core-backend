@@ -88,7 +88,7 @@ jobs:
 
       - name: 'update image tag in manifests'
         run: |
-          sed -i.bak "s|image: .*/cloudnative-backend-prod:.*|image: $FULL_IMAGE_NAME|" kubernetes/deployment.yaml
+          sed -i.bak "s|image: .*/cloudnative-backend-dev:.*|image: $FULL_IMAGE_NAME|" kubernetes/deployment.yaml
           rm kubernetes/deployment.yaml.bak
 
       - name: 'commit and push changes'
@@ -99,5 +99,5 @@ jobs:
           git config user.email "actions@github.com"
           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/kt-cloudnative-04/core-backend
           git add kubernetes/deployment.yaml
-          git commit -m "Update docker image tag"
-          git push
+          git commit -m "Update docker image tag" || echo "No changes to commit"
+          git push || echo "Push failed but continuing"
