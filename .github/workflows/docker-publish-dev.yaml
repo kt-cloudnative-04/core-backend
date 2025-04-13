@@ -3,12 +3,12 @@ name: Publish Docker Image to Github Package
 on:
   push:
     branches:
-      - main
+      - dev
   workflow_dispatch:
 
 env:
-  FULL_IMAGE_NAME: ${{ secrets.REGISTRY_LOGIN_SERVER }}/cloudnative-backend-prod:${{ github.sha }}
-  KUBERNETES_NAMESPACE: backend-prod
+  FULL_IMAGE_NAME: ${{ secrets.REGISTRY_LOGIN_SERVER }}/cloudnative-backend-dev:${{ github.sha }}
+  KUBERNETES_NAMESPACE: backend-dev
 
 jobs:
   build-and-deploy:
@@ -72,7 +72,7 @@ jobs:
 
       - name: 'create or update secrets'
         run: |
-          kubectl create secret generic prod-secret \
+          kubectl create secret generic dev-secret \
             --from-literal=MARIADB_URL="${{ secrets.PROD_MARIADB_URL }}" \
             --from-literal=MARIADB_DATABASE="${{ secrets.PROD_MARIADB_DATABASE }}" \
             --from-literal=MARIADB_USERNAME="${{ secrets.PROD_MARIADB_USERNAME }}" \
@@ -88,7 +88,7 @@ jobs:
 
       - name: 'update image tag in manifests'
         run: |
-          sed -i.bak "s|image: .*/cloudnative-backend-prod:.*|image: $FULL_IMAGE_NAME|" kubernetes/deployment.yaml
+          sed -i.bak "s|image: .*/cloudnative-backend-dev:.*|image: $FULL_IMAGE_NAME|" kubernetes/deployment.yaml
           rm kubernetes/deployment.yaml.bak
 
       - name: 'commit and push changes'
