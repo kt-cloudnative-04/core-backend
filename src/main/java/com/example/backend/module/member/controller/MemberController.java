@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.backend.module.member.dto.request.MemberLoginRequest;
 import com.example.backend.module.member.dto.request.MemberSignupRequest;
+import com.example.backend.module.member.dto.response.MemberLoginResponse;
 import com.example.backend.module.member.exceptions.EmailAlreadyExistException;
 import com.example.backend.module.member.exceptions.MemberNotFoundException;
 import com.example.backend.module.member.exceptions.PasswordNotMatchException;
@@ -40,14 +41,14 @@ public class MemberController {
     }
 
     @PostMapping("/login")  
-    public ResponseEntity<String> login(@RequestBody MemberLoginRequest memberLoginRequest, HttpServletRequest request) {
+    public ResponseEntity<MemberLoginResponse> login(@RequestBody MemberLoginRequest memberLoginRequest, HttpServletRequest request) {
         try {
-            memberService.login(memberLoginRequest, request);
-            return ResponseEntity.ok("logged in");
+            MemberLoginResponse memberLoginResponse = memberService.login(memberLoginRequest, request);
+            return ResponseEntity.ok(memberLoginResponse);
         } catch (MemberNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Member not found");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MemberLoginResponse(-1, ""));
         } catch (PasswordNotMatchException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid password");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MemberLoginResponse(-1, ""));
         }
     }
 

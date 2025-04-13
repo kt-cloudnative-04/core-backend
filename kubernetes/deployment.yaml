@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-backend-prod
+  namespace: backend-prod
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: app-backend-prod
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-backend-prod
+  namespace: backend-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app-backend-prod
+  template:
+    metadata:
+      labels:
+        app: app-backend-prod
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+        - name: container-backend-prod
+          image: gen03registry04.azurecr.io/cloudnative-backend-dev:535f699d3a16a41a3341ad4f72b9f1ddc911e61a
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 250m
+              memory: 512Mi
+          env:
+            - name: MARIADB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: prod-secret
+                  key: MARIADB_URL
+            - name: MARIADB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: prod-secret
+                  key: MARIADB_DATABASE
+            - name: MARIADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: prod-secret
+                  key: MARIADB_USERNAME
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: prod-secret
+                  key: MARIADB_PASSWORD
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: prod-secret
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: prod-secret
+                  key: REDIS_PORT
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  name: prod-secret
+                  key: KAFKA_BOOTSTRAP_SERVERS
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: acr-registry
