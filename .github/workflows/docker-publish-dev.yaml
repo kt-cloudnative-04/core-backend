@@ -79,6 +79,7 @@ jobs:
             --from-literal=MARIADB_PASSWORD="${{ secrets.PROD_MARIADB_PASSWORD }}" \
             --from-literal=REDIS_HOST="${{ secrets.PROD_REDIS_HOST }}" \
             --from-literal=REDIS_PORT="${{ secrets.PROD_REDIS_PORT }}" \
+            --from-literal=REDIS_PASSWORD="${{ secrets.PROD_REDIS_PASSWORD }}" \
             --from-literal=KAFKA_BOOTSTRAP_SERVERS="${{ secrets.PROD_KAFKA_BOOTSTRAP_SERVERS }}" \
             --namespace ${{ env.KUBERNETES_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
@@ -88,7 +89,7 @@ jobs:
 
       - name: 'update image tag in manifests'
         run: |
-          sed -i.bak "s|image: .*/cloudnative-backend-prod:.*|image: $FULL_IMAGE_NAME|" kubernetes/deployment.yaml
+          sed -i.bak "s|image: .*/cloudnative-backend-dev:.*|image: $FULL_IMAGE_NAME|" kubernetes/deployment.yaml
           rm kubernetes/deployment.yaml.bak
 
       - name: 'commit and push changes'
@@ -99,5 +100,5 @@ jobs:
           git config user.email "actions@github.com"
           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/kt-cloudnative-04/core-backend
           git add kubernetes/deployment.yaml
-          git commit -m "Update docker image tag"
-          git push
+          git commit -m "Update docker image tag" || echo "No changes to commit"
+          git push || echo "Push failed but continuing"
