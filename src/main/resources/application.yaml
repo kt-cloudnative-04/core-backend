@@ -1,8 +1,9 @@
 spring:
   datasource:
-    url: jdbc:mariadb://${MARIADB_URL:localhost:3306}/${MARIADB_DATABASE:testdb}
+    url: jdbc:mariadb://${MARIADB_HOST:localhost}:${MARIADB_PORT:3306}/${MARIADB_DATABASE:testdb}
     username: ${MARIADB_USERNAME:testuser}
     password: ${MARIADB_PASSWORD:testpass}
+
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
